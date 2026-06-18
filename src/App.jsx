@@ -581,7 +581,7 @@ function App() {
 
 
             <div className="contact-links">
-              <a href="../public/Manish_Das_Resume_updated.pdf" download className="social-btn resume-btn">
+              <a href="/Manish_Das_Resume_updated.pdf" download className="social-btn resume-btn">
                 <Download size={20} />
                 <span>Download Resume</span>
               </a>
