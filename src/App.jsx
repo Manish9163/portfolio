@@ -1,137 +1,22 @@
-import React, { Suspense, useState, useRef, useEffect } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { Environment, PerspectiveCamera, useProgress, Sphere, useTexture, Float, ContactShadows } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import React, { Suspense, useState, useRef, useEffect, useCallback } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { PerspectiveCamera, Environment } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { Experience } from './components/Experience';
+import Preloader from './components/Preloader';
+import MarqueeText from './components/MarqueeText';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
-import { ExternalLink, Mail, ArrowRight, Code2, BrainCircuit, Trophy, X, Menu, Download } from 'lucide-react';
-import { FaGithub, FaLinkedin } from 'react-icons/fa6';
+import { ExternalLink, Mail, ArrowRight, Code2, BrainCircuit, Trophy, X, Menu, Download, Sparkles, Zap } from 'lucide-react';
+import { FaGithub, FaLinkedin, FaReact, FaPython, FaGitAlt, FaPhp } from 'react-icons/fa6';
+import { SiTypescript, SiTailwindcss, SiThreedotjs, SiGreensock, SiTensorflow, SiMysql } from 'react-icons/si';
 import { AnimatePresence, motion } from 'framer-motion';
 import ProjectDetail from './components/ProjectDetail';
+import MaskHoverReveal from './components/MaskHoverReveal';
 
 gsap.registerPlugin(ScrollTrigger);
-
-const RealisticGlobe = ({ rotationDone, onRotateComplete }) => {
-  const globeRef = useRef();
-  const { camera } = useThree();
-
-  // Use high-res earth maps from three.js repository
-  const colorMap = useTexture('/textures/earth_atmos_2048.jpg');
-  const specularMap = useTexture('/textures/earth_specular_2048.jpg');
-
-  useEffect(() => {
-    if (globeRef.current) {
-      globeRef.current.rotation.x = 0;
-
-      const targetY = -Math.PI * 2 - 3.11;
-      const targetX = 0.39;
-
-      gsap.to(globeRef.current.rotation, {
-        y: targetY,
-        x: targetX,
-        duration: 4.5, // Graceful dynamic rotation
-        ease: "power2.inOut",
-        onComplete: onRotateComplete
-      });
-    }
-  }, [onRotateComplete]);
-
-  useEffect(() => {
-    if (rotationDone) {
-      // Direct camera zoom deep into the surface (West Bengal)
-      gsap.to(camera.position, {
-        z: 2.12,
-        duration: 3.5, // 3.5 seconds to show it clearly entering West Bengal
-        ease: "power2.inOut" // smooth start and finish for the dive
-      });
-    }
-  }, [rotationDone, camera]);
-
-  return (
-    <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 3, 5]} intensity={2} color="#ffffff" />
-      <directionalLight position={[-5, -3, -5]} intensity={0.5} color="#3388ff" />
-      <Sphere args={[2, 64, 64]} ref={globeRef}>
-        <meshStandardMaterial
-          map={colorMap}
-          roughnessMap={specularMap}
-          roughness={0.7}
-          metalness={0.2}
-        />
-      </Sphere>
-    </>
-  );
-};
-
-const GlobeLoader = ({ setStarted }) => {
-  const { progress } = useProgress();
-  const loaderRef = useRef();
-  const [rotationDone, setRotationDone] = useState(false);
-
-  useEffect(() => {
-    if (rotationDone && progress >= 100) {
-      const tl = gsap.timeline({
-        onComplete: () => setStarted(true)
-      });
-
-      tl.to('.globe-progress', { opacity: 0, duration: 0.5, ease: 'power2.inOut' })
-        // Wait for the realistic 3D camera zoom to finish (3.5 seconds zoom)
-        .to(loaderRef.current, { opacity: 0, duration: 1.2 }, "+=3.0")
-        .set(loaderRef.current, { display: 'none' });
-    }
-  }, [rotationDone, progress, setStarted]);
-
-  return (
-    <div ref={loaderRef} className="globe-loader">
-      <div className="globe-canvas-container">
-        <Canvas camera={{ position: [0, 0, 6] }}>
-          <Suspense fallback={null}>
-            <RealisticGlobe rotationDone={rotationDone} onRotateComplete={() => setRotationDone(true)} />
-          </Suspense>
-        </Canvas>
-      </div>
-      <div className="globe-progress">
-        {Math.round(progress)}% LOADED
-      </div>
-    </div>
-  );
-};
-
-const AbstractEngineeringShape = () => {
-  const groupRef = useRef();
-
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      // Base slow rotation
-      groupRef.current.rotation.x += delta * 0.1;
-      groupRef.current.rotation.y -= delta * 0.2;
-
-      // Slight smooth parallax reacting to the mouse pointer over the canvas
-      const targetX = (state.pointer.x * Math.PI) / 6;
-      const targetY = (state.pointer.y * Math.PI) / 6;
-
-      groupRef.current.rotation.x += 0.02 * (targetY - groupRef.current.rotation.x);
-      groupRef.current.rotation.y += 0.02 * (targetX - groupRef.current.rotation.y);
-    }
-  });
-
-  return (
-    <Float speed={2.5} rotationIntensity={0.6} floatIntensity={1.5}>
-      <ambientLight intensity={1} />
-      <directionalLight position={[10, 10, 10]} intensity={2} />
-      <directionalLight position={[-10, -10, -10]} intensity={1} color="#3388ff" />
-      <group ref={groupRef}>
-      </group>
-    </Float>
-  );
-};
-
-
 
 function App() {
   const [activeSection, setActiveSection] = useState(0);
@@ -142,7 +27,7 @@ function App() {
   const dotRef = useRef();
   const outlineRef = useRef();
 
-  // Detect touch devices on mount to resolve cursor issues
+  // Detect touch devices on mount
   useEffect(() => {
     const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     if (isTouch) {
@@ -152,61 +37,92 @@ function App() {
     }
   }, []);
 
+  const handlePreloaderComplete = useCallback(() => {
+    setIsStarted(true);
+  }, []);
+
   useGSAP(() => {
-    // Cursor Movement
+    // Magnetic Cursor
     const onMouseMove = (e) => {
       const { clientX, clientY } = e;
-      gsap.to(dotRef.current, { x: clientX - 4, y: clientY - 4, duration: 0.1 });
-      gsap.to(outlineRef.current, { x: clientX - 20, y: clientY - 20, duration: 0.3 });
+      gsap.to(dotRef.current, { x: clientX - 4, y: clientY - 4, duration: 0.08 });
+      gsap.to(outlineRef.current, { x: clientX - 20, y: clientY - 20, duration: 0.25 });
     };
+
+    // Cursor scaling on interactive elements
+    const onMouseEnter = () => {
+      gsap.to(outlineRef.current, { scale: 2.5, opacity: 0.3, duration: 0.3 });
+      gsap.to(dotRef.current, { scale: 0.5, duration: 0.3 });
+    };
+    const onMouseLeave = () => {
+      gsap.to(outlineRef.current, { scale: 1, opacity: 1, duration: 0.3 });
+      gsap.to(dotRef.current, { scale: 1, duration: 0.3 });
+    };
+
     window.addEventListener('mousemove', onMouseMove);
 
-    // Initialize Lenis for smooth scrolling
-    const lenis = new Lenis({
-      duration: 1.5,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      wheelMultiplier: 1,
+    // Add hover effect to interactive elements
+    const interactives = document.querySelectorAll('a, button, .project-card, .skill-badge');
+    interactives.forEach(el => {
+      el.addEventListener('mouseenter', onMouseEnter);
+      el.addEventListener('mouseleave', onMouseLeave);
     });
 
+    // Lenis smooth scrolling
+    const lenis = new Lenis({
+      duration: 1.8,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 0.8,
+    });
+    window.lenis = lenis;
+
     lenis.on('scroll', ScrollTrigger.update);
-
-    function update(time) {
-      lenis.raf(time * 1000);
-    }
-
+    function update(time) { lenis.raf(time * 1000); }
     gsap.ticker.add(update);
     gsap.ticker.lagSmoothing(0);
 
-    // Reveal animations for text content as user scrolls
+    // Scroll-reveal animations
     const textEls = gsap.utils.toArray('.anim-text');
     textEls.forEach((el) => {
       gsap.from(el, {
-        y: 50,
+        y: 60,
         opacity: 0,
-        duration: 1.5,
+        duration: 1.2,
         ease: 'power3.out',
         scrollTrigger: {
           trigger: el,
-          start: 'top 85%',
+          start: 'top 88%',
           toggleActions: 'play none none reverse'
         }
       });
     });
 
-    // Update active side progress marker based on section in view
+    // Parallax effects for labels
+    gsap.utils.toArray('.content-label').forEach(el => {
+      gsap.to(el, {
+        y: -30,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 1,
+        }
+      });
+    });
+
+    // Section tracking
     const sections = document.querySelectorAll('.section:not(.hero-section)');
     sections.forEach((sec, i) => {
       ScrollTrigger.create({
         trigger: sec,
         start: 'top 50%',
         end: 'bottom 50%',
-        onEnter: () => setActiveSection(i + 1), // 1-indexed for content sections
+        onEnter: () => setActiveSection(i + 1),
         onEnterBack: () => setActiveSection(i + 1),
       });
     });
 
-    // special trigger for hero
     ScrollTrigger.create({
       trigger: '.hero-section',
       start: 'top top',
@@ -219,20 +135,25 @@ function App() {
       lenis.destroy();
       gsap.ticker.remove(update);
       window.removeEventListener('mousemove', onMouseMove);
+      interactives.forEach(el => {
+        el.removeEventListener('mouseenter', onMouseEnter);
+        el.removeEventListener('mouseleave', onMouseLeave);
+      });
     };
   }, { scope: containerRef });
 
+  // Hero entrance animation
   useGSAP(() => {
     if (isStarted) {
       const tl = gsap.timeline();
-      tl.from('.hero-top-text', { y: 20, opacity: 0, duration: 1, ease: 'power3.out' })
-        .from('.hero-title-anim', { y: 40, opacity: 0, duration: 1.2, ease: 'power4.out' }, "-=0.6")
-        .from('.hero-subtitle-anim', { y: 20, opacity: 0, duration: 1, ease: 'power3.out' }, "-=0.8")
-        .from('.scroll-indicator', { opacity: 0, duration: 1 }, "-=0.5");
+      tl.from('.hero-eyebrow', { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' })
+        .from('.hero-name-char', { y: 100, opacity: 0, rotateX: 90, stagger: 0.04, duration: 1, ease: 'power4.out' }, '-=0.4')
+        .from('.hero-subtitle-word', { y: 30, opacity: 0, stagger: 0.06, duration: 0.8, ease: 'power3.out' }, '-=0.5')
+        .from('.hero-cta-group', { y: 20, opacity: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4')
+        .from('.scroll-indicator', { opacity: 0, duration: 1 }, '-=0.2');
     }
   }, [isStarted]);
 
-  // Project details data array
   const projectsData = [
     {
       id: 1,
@@ -270,7 +191,7 @@ function App() {
       id: 3,
       title: "Indian Wanderer",
       short: "Platform for personalized itinerary planning and scheduling.",
-      desc: "A comprehensive monolithic platform designed to transform the travel experience. Users can securely log in, build personalized daily trip itineraries, find budget-friendly activities, and track travel expenses in real-time. Designed with a priority on safety, the system integrates robust guide communication channels, booking tools, and full-featured vendor management dashboards.",
+      desc: "A comprehensive monolithic platform designed to transform the travel experience. Users can securely log in, build personalized daily trip itineraries, find budget-friendly activities, and track travel expenses in real-time.",
       tech: ["PHP", "MySQL", "JavaScript", "React", "Bootstrap", "Angular", "Node.js", "Tailwind CSS", "Next.js", "TypeScript"],
       techUsage: {
         "PHP": "Server-side scripting for vendor management, booking logic, and session handling.",
@@ -290,7 +211,7 @@ function App() {
       id: 4,
       title: "Accessibility Checker",
       short: "Specialized web auditing tool ensuring inclusive standards.",
-      desc: "A browser-based auditing engine that validates DOM trees against modern Web Content Accessibility Guidelines (WCAG). It parses active code logic deeply to spotlight contrast violations, missing aria-labels, and improper interactive elements to export comprehensive compliance audits.",
+      desc: "A browser-based auditing engine that validates DOM trees against modern Web Content Accessibility Guidelines (WCAG). It parses active code logic deeply to spotlight contrast violations, missing aria-labels, and improper interactive elements.",
       tech: ["React.js", "Chrome API", "DOM Parser", "WCAG 2.1 JS Rules", "TypeScript"],
       techUsage: {
         "React.js": "Frontend interface for the auditing dashboard displaying violations and compliance scores.",
@@ -305,7 +226,7 @@ function App() {
       id: 5,
       title: "FarmFi",
       short: "An AI ecosystem for smart farming and agricultural financing.",
-      desc: "A comprehensive AI-driven ecosystem aiming to revolutionize the agricultural sector. It leverages machine learning to provide actionable insights for crop management and integrates specialized financial tooling to help farmers secure fair loans and manage investments.",
+      desc: "A comprehensive AI-driven ecosystem aiming to revolutionize the agricultural sector. It leverages machine learning to provide actionable insights for crop management and integrates specialized financial tooling.",
       tech: ["AI/ML", "React", "Python", "Data Science", "Flask", "TensorFlow", "MySQL"],
       techUsage: {
         "AI/ML": "Predictive models for crop yield forecasting, disease detection, and market price analysis.",
@@ -320,40 +241,42 @@ function App() {
     }
   ];
 
+  const navItems = ['philosophy', 'experience', 'craft', 'innovation', 'projects', 'about', 'contact'];
+
   return (
     <div ref={containerRef}>
+      {/* Preloader */}
+      {!isStarted && <Preloader onComplete={handlePreloaderComplete} />}
+
       {/* Cinematic Overlays */}
       <div className="grain" />
       <div className="cursor-dot" ref={dotRef} />
       <div className="cursor-outline" ref={ref => outlineRef.current = ref} />
 
-      {/* Structural Minimalist Crosshairs (UI Aesthetics) */}
+      {/* Structural Crosshairs */}
       <div className="crosshair ch-tl" />
       <div className="crosshair ch-tr" />
       <div className="crosshair ch-bl" />
       <div className="crosshair ch-br" />
 
-      {/* Screen Vignette Glow (Tech border) */}
+      {/* Vignette */}
       <div className="vignette-overlay" />
 
-      {/* Modern Top Header */}
+      {/* Header */}
       <header className="header">
-        <div className="brand">Manish Das</div>
-        
-        {/* Desktop Nav */}
+        <div className="brand">
+          <span className="brand-name">Manish Das</span>
+          <span className="brand-dot" />
+        </div>
+
         <nav className="nav-links desktop-nav">
-          <a href="#philosophy">Philosophy</a>
-          <a href="#experience">Experience</a>
-          <a href="#craft">Craft</a>
-          <a href="#innovation">Innovation</a>
-          <a href="#projects">Projects</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          {navItems.map(item => (
+            <a key={item} href={`#${item}`}>{item}</a>
+          ))}
         </nav>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="mobile-menu-btn" 
+        <button
+          className="mobile-menu-btn"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle Navigation Menu"
         >
@@ -361,10 +284,10 @@ function App() {
         </button>
       </header>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Nav */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div 
+          <motion.div
             className="mobile-nav-overlay"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -372,19 +295,15 @@ function App() {
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             <nav className="mobile-nav-links">
-              <a href="#philosophy" onClick={() => setMobileMenuOpen(false)}>Philosophy</a>
-              <a href="#experience" onClick={() => setMobileMenuOpen(false)}>Experience</a>
-              <a href="#craft" onClick={() => setMobileMenuOpen(false)}>Craft</a>
-              <a href="#innovation" onClick={() => setMobileMenuOpen(false)}>Innovation</a>
-              <a href="#projects" onClick={() => setMobileMenuOpen(false)}>Projects</a>
-              <a href="#about" onClick={() => setMobileMenuOpen(false)}>About</a>
-              <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              {navItems.map(item => (
+                <a key={item} href={`#${item}`} onClick={() => setMobileMenuOpen(false)}>{item}</a>
+              ))}
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Vertical Tracker (Progress) */}
+      {/* Side Progress */}
       <div className="side-progress">
         {[
           { num: '01', label: 'PHILOSOPHY' },
@@ -402,80 +321,103 @@ function App() {
         ))}
       </div>
 
-      {/* 3D Background - fixed behind content */}
+      {/* 3D Background */}
       <div className="canvas-container">
         <Canvas shadows>
           <PerspectiveCamera makeDefault position={[0, 0, 25]} fov={45} />
-          <color attach="background" args={['#010101']} />
+          <color attach="background" args={['#03030b']} />
 
-          <ambientLight intensity={0.5} color="#ffffff" />
-          <spotLight position={[20, 20, 10]} intensity={2.5} angle={0.5} penumbra={1} color="#3388ff" castShadow />
-          <directionalLight position={[-20, -10, -10]} intensity={1.5} color="#444444" />
+          <ambientLight intensity={0.5} color="#b0b0ff" />
+          <spotLight position={[20, 20, 10]} intensity={4} angle={0.5} penumbra={1} color="#7c3aed" castShadow />
+          <directionalLight position={[-20, -10, -10]} intensity={2.0} color="#06b6d4" />
+          <pointLight position={[0, 10, 20]} intensity={1.5} color="#f43f5e" />
 
           <Suspense fallback={null}>
-            <Environment preset="studio" />
+            <Environment preset="city" />
             <Experience />
-
             <EffectComposer>
-              <Bloom luminanceThreshold={0.1} mipmapBlur intensity={0.8} />
+              <Bloom luminanceThreshold={0.08} mipmapBlur intensity={1.2} radius={0.4} />
             </EffectComposer>
           </Suspense>
         </Canvas>
       </div>
 
-      {/* Front HTML Content (Scrollable layers on top of 3D) */}
+      {/* Scrollable Content */}
       <div className="scroll-area content-layer">
 
         {/* HERO */}
         <section className="section hero-section">
-          <div className="hero-text-content">
-            <p className="hero-top-text">ELEVATE DIGITAL EXPERIENCES</p>
-            <div style={{ overflow: 'hidden' }}>
-              <h1 className="hero-title hero-title-anim">Manish Das</h1>
+          <div className="hero-inner">
+            <div className="hero-text-content">
+              <p className="hero-eyebrow">
+              </p>
+              <div className="hero-name-wrap">
+                {'MANISH'.split('').map((char, i) => (
+                  <span key={`n1-${i}`} className="hero-name-char">{char}</span>
+                ))}
+              </div>
+              <div className="hero-name-wrap hero-name-outline">
+                {'DAS'.split('').map((char, i) => (
+                  <span key={`n2-${i}`} className="hero-name-char">{char}</span>
+                ))}
+              </div>
+              <div className="hero-subtitle-wrap">
+                {['ENGINEERING', '&', 'DESIGN'].map((word, i) => (
+                  <span key={i} className="hero-subtitle-word">{word}</span>
+                ))}
+              </div>
+              <div className="hero-cta-group">
+                <button className="hero-btn-primary" onClick={() => {
+                  document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+                }}>
+                  <span>View Projects</span>
+                  <ArrowRight size={18} />
+                </button>
+                <a href="mailto:manishdas20987@gmail.com" className="hero-btn-secondary">
+                  <Mail size={16} />
+                  <span>Get in Touch</span>
+                </a>
+              </div>
             </div>
-            <div style={{ overflow: 'hidden' }}>
-              <h3 className="hero-subtitle hero-subtitle-anim">ENGINEERING & DESIGN</h3>
-            </div>
-            <button className="hero-btn" onClick={() => {
-              document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
-            }}>
-              View Projects
-            </button>
-          </div>
 
-          <div className="hero-image-content">
-            <div className="webgl-image-container">
-              <Canvas camera={{ position: [0, 0, 8] }} style={{ pointerEvents: 'auto' }}>
-                <Suspense fallback={null}>
-                  <AbstractEngineeringShape />
-                </Suspense>
-              </Canvas>
+            <div className="hero-image-column">
+              <MaskHoverReveal
+                imageSrc="/manish.png"
+                revealSrc="/manish.png"
+                alt="Manish Das"
+              />
             </div>
           </div>
 
           <div className="scroll-indicator">
-            <div className="mouse-icon"></div>
+            <div className="mouse-icon" />
             <span className="scroll-indicator-label">Scroll</span>
           </div>
         </section>
 
-        {/* 01 */}
+        {/* MARQUEE BAND */}
+        <div className="marquee-section">
+          <MarqueeText text="DEVELOPER • DESIGNER • ENGINEER • INNOVATOR • ML SPECIALIST" speed={35} />
+        </div>
+
+        {/* 01 PHILOSOPHY */}
         <section id="philosophy" className="section content-section">
           <div className="content-block anim-text">
             <p className="content-label">01 / PHILOSOPHY</p>
-            <h2 className="content-title">Growth Mindset.</h2>
+            <h2 className="content-title">Growth <br /><span className="gradient-text">Mindset.</span></h2>
             <p className="content-p">I believe in continuous evolution. Blending a creative arts background with core computer science principles allows me to approach technical challenges with unique problem-solving perspectives, ensuring builds are both architecturally sound and user-centric.</p>
+            <div className="content-accent-line" />
           </div>
         </section>
 
-        {/* 02 */}
+        {/* 02 EXPERIENCE */}
         <section id="experience" className="section content-section">
           <div className="content-block right anim-text">
             <p className="content-label">02 / EXPERIENCE & EDUCATION</p>
-            <h2 className="content-title">Journey So Far.</h2>
+            <h2 className="content-title">Journey <br /><span className="gradient-text">So Far.</span></h2>
             <div className="timeline">
               <div className="timeline-item">
-                <div className="timeline-dot" style={{ background: '#4ade80' }}></div>
+                <div className="timeline-dot active-dot" />
                 <div className="timeline-content">
                   <h4>ML Intern — FreshoSoft</h4>
                   <p className="timeline-date">Machine Learning & Computer Vision</p>
@@ -483,7 +425,7 @@ function App() {
                 </div>
               </div>
               <div className="timeline-item">
-                <div className="timeline-dot"></div>
+                <div className="timeline-dot" />
                 <div className="timeline-content">
                   <h4>Bachelor of Computer Applications</h4>
                   <p className="timeline-date">Brainware University (2024 - 2027)</p>
@@ -491,7 +433,7 @@ function App() {
                 </div>
               </div>
               <div className="timeline-item">
-                <div className="timeline-dot"></div>
+                <div className="timeline-dot" />
                 <div className="timeline-content">
                   <h4>Higher Secondary (Arts)</h4>
                   <p className="timeline-date">Bora Madhu Sudan High School (2022)</p>
@@ -502,53 +444,93 @@ function App() {
           </div>
         </section>
 
-        {/* 03 */}
+        {/* 03 CRAFT */}
         <section id="craft" className="section content-section">
-          <div className="content-block anim-text">
+          <div className="content-block anim-text" style={{ maxWidth: '550px' }}>
             <p className="content-label">03 / CRAFT</p>
-            <h2 className="content-title">Frontend & Logic.</h2>
+            <h2 className="content-title">Frontend <br /><span className="gradient-text">& Logic.</span></h2>
             <p className="content-p">Specialized in modern web tech: <strong>React.js, TypeScript, and Tailwind CSS</strong>. Deep knowledge of system programming in <strong>C and Python</strong> for automation and data analysis. Experienced in Git-based collaboration.</p>
-            
-            <div className="skills-grid">
-              <div className="skill-badge">React.js</div>
-              <div className="skill-badge">TypeScript</div>
-              <div className="skill-badge">Tailwind CSS</div>
-              <div className="skill-badge">Three.js</div>
-              <div className="skill-badge">GSAP</div>
-              <div className="skill-badge">Python</div>
-              <div className="skill-badge">TensorFlow</div>
-              <div className="skill-badge">Git</div>
-              <div className="skill-badge">Lenis</div>
-              <div className="skill-badge">Context API</div>
-              <div className="skill-badge">MySQL</div>
-              <div className="skill-badge">CNN</div>
-              <div className="skill-badge">PHP</div>
 
+            <div className="skills-grid">
+              {[
+                { name: 'React.js', icon: <FaReact />, color: '#61DAFB' },
+                { name: 'TypeScript', icon: <SiTypescript />, color: '#3178C6' },
+                { name: 'Tailwind CSS', icon: <SiTailwindcss />, color: '#06B6D4' },
+                { name: 'Three.js', icon: <SiThreedotjs />, color: '#ffffff' },
+                { name: 'GSAP', icon: <SiGreensock />, color: '#88CE02' },
+                { name: 'Python', icon: <FaPython />, color: '#3776AB' },
+                { name: 'TensorFlow', icon: <SiTensorflow />, color: '#FF6F00' },
+                { name: 'Git', icon: <FaGitAlt />, color: '#F05032' },
+                { name: 'Lenis', icon: <Sparkles />, color: '#c084fc' },
+                { name: 'Context API', icon: <FaReact />, color: '#61DAFB' },
+                { name: 'MySQL', icon: <SiMysql />, color: '#4479A1' },
+                { name: 'CNN', icon: <BrainCircuit />, color: '#f472b6' },
+                { name: 'PHP', icon: <FaPhp />, color: '#777BB4' },
+              ].map((skill, i) => (
+                <div
+                  key={i}
+                  className="skill-badge"
+                  style={{ '--skill-accent': skill.color, animationDelay: `${i * 0.05}s` }}
+                >
+                  <div className="skill-badge-inner">
+                    <div className="skill-icon-face">
+                      {skill.icon}
+                    </div>
+                    <div className="skill-name-face">
+                      <span>{skill.name}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 04 */}
+        {/* 04 INNOVATION */}
         <section id="innovation" className="section content-section">
           <div className="content-block right anim-text">
             <p className="content-label">04 / INNOVATION</p>
-            <h2 className="content-title">AI & IoT Integration.</h2>
-            <p className="content-p">Bridging the physical systems with intelligent computing. Specialized in deploying machine learning models for predictive analytics and developing end-to-end IoT network architectures for real-time monitoring.</p>
-            
+            <h2 className="content-title">AI & IoT <br /><span className="gradient-text">Integration.</span></h2>
+            <p className="content-p">Bridging physical systems with intelligent computing. Specialized in deploying machine learning models for predictive analytics and developing end-to-end IoT network architectures for real-time monitoring.</p>
+            <div className="innovation-stats">
+              <div className="stat-card">
+                <span className="stat-number">5+</span>
+                <span className="stat-label">Projects Built</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-number">95%</span>
+                <span className="stat-label">ML Accuracy</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-number">8.4</span>
+                <span className="stat-label">CGPA</span>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* 05 */}
+        {/* MARQUEE BAND 2 */}
+        <div className="marquee-section marquee-reverse">
+          <MarqueeText text="REACT • THREE.JS • TENSORFLOW • PYTHON • GSAP • NODE.JS • MYSQL" speed={30} direction="right" />
+        </div>
+
+        {/* 05 PROJECTS */}
         <section id="projects" className="section content-section">
-          <div className="content-block anim-text">
+          <div className="content-block anim-text" style={{ maxWidth: '100%' }}>
             <p className="content-label">05 / PROJECTS</p>
-            <h2 className="content-title">Deployed Systems.</h2>
-            
+            <h2 className="content-title">Deployed <br /><span className="gradient-text">Systems.</span></h2>
+
             <div className="project-grid">
               {projectsData.map(proj => (
                 <div className="project-card" key={proj.id}>
+                  <div className="project-card-number">{String(proj.id).padStart(2, '0')}</div>
                   <h3>{proj.title}</h3>
                   <p>{proj.short}</p>
+                  <div className="project-card-tags">
+                    {proj.tech.slice(0, 3).map((t, i) => (
+                      <span key={i} className="project-tag">{t}</span>
+                    ))}
+                  </div>
                   <button className="project-link" onClick={() => setSelectedProject(proj)}>
                     View Details <ArrowRight size={16} />
                   </button>
@@ -558,27 +540,23 @@ function App() {
           </div>
         </section>
 
-        {/* 06 */}
+        {/* 06 ABOUT */}
         <section id="about" className="section content-section">
-          <div className="content-block right anim-text">
+          <div className="content-block anim-text">
             <p className="content-label">06 / ABOUT ME</p>
-            <h2 className="content-title">Beyond the Code.</h2>
-
-                  
-                  <p className="content-p" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}><strong>ML Internship — FreshoSoft</strong> trained CNN models for plant disease recognition under industry mentorship.</p>
-
+            <h2 className="content-title">Beyond <br /><span className="gradient-text">The Code.</span></h2>
+            <p className="content-p" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}><strong>ML Internship — FreshoSoft</strong> trained CNN models for plant disease recognition under industry mentorship.</p>
             <p className="content-p" style={{ marginTop: '2rem' }}><strong>Interests:</strong> Machine Learning research, cycling, and acoustic guitar.</p>
             <p className="content-p" style={{ marginTop: '1rem' }}><strong>Languages:</strong> Multilingual fluency in English, Bengali, and Hindi.</p>
           </div>
         </section>
 
-        {/* 07 */}
-        <section id="contact" className="section content-section">
-          <div className="content-block anim-text" style={{ marginTop: '10vh' }}>
+        {/* 07 CONTACT */}
+        <section id="contact" className="section content-section contact-section">
+          <div className="content-block anim-text" style={{ marginTop: '10vh', maxWidth: '600px' }}>
             <p className="content-label">07 / CONTACT</p>
-            <h2 className="content-title">Get In Touch.</h2>
+            <h2 className="content-title">Let's <span className="gradient-text">Connect.</span></h2>
             <p className="content-p" style={{ marginBottom: '3rem' }}>If you're looking for a passionate developer bridging frontend technologies and intelligent systems, feel free to reach out.</p>
-
 
             <div className="contact-links">
               <a href="/Manish_Das_Resume_updated.pdf" download className="social-btn resume-btn">
@@ -601,10 +579,13 @@ function App() {
           </div>
         </section>
 
+        {/* Footer */}
+        <footer className="footer">
+          <p>© 2026 Manish Das — Crafted with passion</p>
+        </footer>
       </div>
-      <GlobeLoader setStarted={setIsStarted} />
 
-      {/* Full-Page Project Detail View */}
+      {/* Project Detail Modal */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectDetail
@@ -613,7 +594,6 @@ function App() {
           />
         )}
       </AnimatePresence>
-
     </div>
   );
 }

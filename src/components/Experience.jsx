@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { TechWheel } from './TechWheel';
 import { PhilosophyModel, EducationModel, CraftModel, InnovationModel, ProjectsModel, AccoladesModel, ContactModel } from './SceneModels';
+import ParticleField from './ParticleField';
 import * as THREE from 'three';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -31,7 +32,7 @@ export function Experience() {
         trigger: '.scroll-area',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1, 
+        scrub: 1,
       }
     });
 
@@ -40,19 +41,19 @@ export function Experience() {
     gsap.set(wheelRef.current.rotation, { x: -0.1, y: 0.1 });
 
     const subsequentModels = [
-        philosophyRef.current, 
-        educationRef.current, 
-        craftRef.current, 
-        innovationRef.current, 
-        projectsRef.current, 
-        accoladesRef.current,
-        contactRef.current
+      philosophyRef.current,
+      educationRef.current,
+      craftRef.current,
+      innovationRef.current,
+      projectsRef.current,
+      accoladesRef.current,
+      contactRef.current
     ];
-    
+
     // Hide all other models initially
     subsequentModels.forEach(m => {
-        gsap.set(m.position, { y: -30 });
-        gsap.set(m.scale, { x: 0, y: 0, z: 0 });
+      gsap.set(m.position, { y: -30 });
+      gsap.set(m.scale, { x: 0, y: 0, z: 0 });
     });
 
     // Hero -> 01 PHILOSOPHY
@@ -101,9 +102,9 @@ export function Experience() {
 
   // Constant slow rotation for TechWheel (others self-rotate in SceneModels)
   useFrame((state, delta) => {
-      if(wheelRef.current) {
-          wheelRef.current.rotation.z += delta * 0.15;
-      }
+    if (wheelRef.current) {
+      wheelRef.current.rotation.z += delta * 0.15;
+    }
   });
 
   return (
@@ -116,19 +117,9 @@ export function Experience() {
       <ProjectsModel ref={projectsRef} />
       <AccoladesModel ref={accoladesRef} />
       <ContactModel ref={contactRef} />
-      
-      {/* Subtle floating tech dust/particles in background */}
-      <points>
-        <bufferGeometry>
-           <bufferAttribute 
-              attach="attributes-position" 
-              count={200}
-              array={new Float32Array(600).map(() => (Math.random() - 0.5) * 80)} 
-              itemSize={3}
-           />
-        </bufferGeometry>
-        <pointsMaterial size={0.1} color="#5599ff" transparent opacity={0.3} />
-      </points>
+
+      {/* Cosmic particle field */}
+      <ParticleField count={800} />
     </group>
   );
 }
