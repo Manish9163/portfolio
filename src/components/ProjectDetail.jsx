@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
-import { ArrowLeft, ExternalLink, Code2, Layers, Cpu, Globe, BrainCircuit, Shield, Database } from 'lucide-react';
-import { FaGithub } from 'react-icons/fa6';
+import { ArrowLeft, ExternalLink, Code2, Layers, Cpu, Globe, BrainCircuit, Shield, Database, Workflow, Sparkles, AlertTriangle, CheckCircle2, Zap, Award } from 'lucide-react';
+import { FaGithub, FaReact, FaPython, FaPhp, FaAngular, FaBootstrap, FaNodeJs } from 'react-icons/fa6';
+import { SiTypescript, SiTailwindcss, SiTensorflow, SiMysql, SiFlask, SiOpencv, SiArduino, SiEspressif, SiJavascript } from 'react-icons/si';
+import { TbBrandNextjs, TbBrandCpp } from 'react-icons/tb';
 import * as THREE from 'three';
 import gsap from 'gsap';
 
@@ -32,9 +34,39 @@ const techColorMap = {
   'DOM Parser': '#E34F26',
   'WCAG 2.1 JS Rules': '#005A9C',
   'AI/ML': '#FF6F00',
-  'Data Science': '#150458',
+  'Data Science': '#624bc0ff',
   'Python Data Analytics': '#3572A5',
   'Web Dashboards': '#3388ff',
+};
+
+// Map tech names to their icon components and accent colors
+const techIconMap = {
+  'C++': { icon: <TbBrandCpp />, color: '#f34b7d' },
+  'Arduino': { icon: <SiArduino />, color: '#00979D' },
+  'ESP32': { icon: <SiEspressif />, color: '#E7352C' },
+  'Python': { icon: <FaPython />, color: '#3572A5' },
+  'Python Data Analytics': { icon: <FaPython />, color: '#3572A5' },
+  'TensorFlow': { icon: <SiTensorflow />, color: '#FF6F00' },
+  'React': { icon: <FaReact />, color: '#61DAFB' },
+  'React.js': { icon: <FaReact />, color: '#61DAFB' },
+  'Node.js': { icon: <FaNodeJs />, color: '#339933' },
+  'Flask': { icon: <SiFlask />, color: '#ffffff' },
+  'OpenCV': { icon: <SiOpencv />, color: '#5C3EE8' },
+  'CNN': { icon: <BrainCircuit />, color: '#FF6F00' },
+  'PHP': { icon: <FaPhp />, color: '#777BB4' },
+  'MySQL': { icon: <SiMysql />, color: '#4479A1' },
+  'JavaScript': { icon: <SiJavascript />, color: '#F7DF1E' },
+  'Bootstrap': { icon: <FaBootstrap />, color: '#7952B3' },
+  'Angular': { icon: <FaAngular />, color: '#DD0031' },
+  'Next.js': { icon: <TbBrandNextjs />, color: '#ffffff' },
+  'TypeScript': { icon: <SiTypescript />, color: '#3178C6' },
+  'Tailwind CSS': { icon: <SiTailwindcss />, color: '#06B6D4' },
+  'Chrome API': { icon: <Globe />, color: '#4285F4' },
+  'DOM Parser': { icon: <Code2 />, color: '#E34F26' },
+  'WCAG 2.1 JS Rules': { icon: <Shield />, color: '#005A9C' },
+  'AI/ML': { icon: <BrainCircuit />, color: '#FF6F00' },
+  'Data Science': { icon: <Database />, color: '#624bc0ff' },
+  'Web Dashboards': { icon: <Layers />, color: '#3388ff' },
 };
 
 // Map project ids to icons and themes
@@ -295,7 +327,12 @@ const ProjectDetail = ({ project, onClose }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    // Lock both html and body to completely eliminate background scroll leaks
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
 
     // Completely stop global Lenis scrolling while modal is open
@@ -303,22 +340,28 @@ const ProjectDetail = ({ project, onClose }) => {
       window.lenis.stop();
     }
 
-    // Stop native event propagation as a fallback
-    const stopPropagation = (e) => e.stopPropagation();
+    // If wheel event happens anywhere in modal outside the scroll container (e.g. topbar/padding),
+    // forward the scroll to scrollRef to provide a seamless scrolling experience
+    const handleModalWheel = (e) => {
+      if (scrollRef.current && !scrollRef.current.contains(e.target)) {
+        scrollRef.current.scrollTop += e.deltaY;
+        e.preventDefault();
+      }
+    };
+
     const el = pageRef.current;
     if (el) {
-      el.addEventListener('wheel', stopPropagation, { passive: false });
-      el.addEventListener('touchmove', stopPropagation, { passive: false });
+      el.addEventListener('wheel', handleModalWheel, { passive: false });
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       if (window.lenis) {
         window.lenis.start();
       }
       if (el) {
-        el.removeEventListener('wheel', stopPropagation);
-        el.removeEventListener('touchmove', stopPropagation);
+        el.removeEventListener('wheel', handleModalWheel);
       }
     };
   }, []);
@@ -419,7 +462,18 @@ const ProjectDetail = ({ project, onClose }) => {
                   </div>
                 </motion.div>
 
-                {project.year && (
+                {project.badge && (
+                  <motion.div
+                    className="project-detail-badge-pill"
+                    variants={itemVariants}
+                    style={{ borderColor: `${theme.accent}50`, color: theme.accent, background: `${theme.accent}12` }}
+                  >
+                    <Award size={14} />
+                    <span>{project.badge}</span>
+                  </motion.div>
+                )}
+
+                {project.year && !project.badge && (
                   <motion.div className="project-detail-year" variants={itemVariants} style={{ color: theme.accent }}>
                     {project.year}
                   </motion.div>
@@ -433,48 +487,157 @@ const ProjectDetail = ({ project, onClose }) => {
                   {project.short}
                 </motion.p>
 
+                {/* Key Metrics Grid */}
+                {project.metrics && project.metrics.length > 0 && (
+                  <motion.div className="project-detail-metrics-grid" variants={itemVariants}>
+                    {project.metrics.map((metric, idx) => (
+                      <div
+                        key={idx}
+                        className="project-detail-metric-card"
+                        style={{ '--metric-accent': theme.accent }}
+                      >
+                        <div className="project-detail-metric-val" style={{ color: theme.accent }}>{metric.value}</div>
+                        <div className="project-detail-metric-label">{metric.label}</div>
+                        {metric.sub && <div className="project-detail-metric-sub">{metric.sub}</div>}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
                 <motion.div className="project-detail-divider" variants={itemVariants}>
                   <div className="divider-line" style={{ background: `linear-gradient(180deg, ${theme.accent}60, transparent)` }} />
                 </motion.div>
               </div>
 
-              {/* Description */}
+              {/* In-Depth Overview & Context */}
               <motion.div className="project-detail-section" variants={itemVariants}>
                 <div className="section-header">
-                  <Layers size={20} style={{ color: theme.accent }} />
-                  <h3>Overview</h3>
+                  <Layers size={22} style={{ color: theme.accent }} />
+                  <h3>In-Depth Overview & Engineering Context</h3>
                 </div>
-                <p className="project-detail-desc">{project.desc}</p>
+                <div className="project-detail-paragraphs">
+                  {Array.isArray(project.detailedDescription) ? (
+                    project.detailedDescription.map((para, idx) => (
+                      <p key={idx} className="project-detail-paragraph">{para}</p>
+                    ))
+                  ) : (
+                    <p className="project-detail-paragraph">{project.desc}</p>
+                  )}
+                </div>
               </motion.div>
+
+              {/* System Architecture & Workflow */}
+              {project.architecture && project.architecture.length > 0 && (
+                <motion.div className="project-detail-section" variants={itemVariants}>
+                  <div className="section-header">
+                    <Workflow size={22} style={{ color: theme.accent }} />
+                    <h3>System Architecture & Workflow</h3>
+                  </div>
+                  <div className="project-detail-arch-grid">
+                    {project.architecture.map((item, idx) => (
+                      <div key={idx} className="project-detail-arch-card">
+                        <div className="project-detail-arch-header">
+                          <span className="project-detail-arch-step" style={{ background: `${theme.accent}25`, color: theme.accent }}>
+                            {item.step}
+                          </span>
+                          <span className="project-detail-arch-title">{item.title}</span>
+                        </div>
+                        <p className="project-detail-arch-desc">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Key Features & Engineering Highlights */}
+              {project.features && project.features.length > 0 && (
+                <motion.div className="project-detail-section" variants={itemVariants}>
+                  <div className="section-header">
+                    <Sparkles size={22} style={{ color: theme.accent }} />
+                    <h3>Key Features & Engineering Capabilities</h3>
+                  </div>
+                  <div className="project-detail-features-grid">
+                    {project.features.map((feature, idx) => (
+                      <div key={idx} className="project-detail-feature-card">
+                        <CheckCircle2 size={20} className="project-detail-feature-icon" style={{ color: theme.accent }} />
+                        <div>
+                          <div className="project-detail-feature-title">{feature.title}</div>
+                          <div className="project-detail-feature-desc">{feature.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Technical Challenges & Solutions */}
+              {project.challenges && project.challenges.length > 0 && (
+                <motion.div className="project-detail-section" variants={itemVariants}>
+                  <div className="section-header">
+                    <Zap size={22} style={{ color: theme.accent }} />
+                    <h3>Technical Challenges & Architectural Solutions</h3>
+                  </div>
+                  <div className="project-detail-challenges-list">
+                    {project.challenges.map((ch, idx) => (
+                      <div key={idx} className="project-detail-challenge-card">
+                        <div className="challenge-row">
+                          <span className="challenge-badge problem">
+                            <AlertTriangle size={12} />
+                            <span>Challenge</span>
+                          </span>
+                          <p className="challenge-text">{ch.challenge}</p>
+                        </div>
+                        <div className="challenge-row">
+                          <span className="challenge-badge solution">
+                            <CheckCircle2 size={12} />
+                            <span>Solution</span>
+                          </span>
+                          <p className="challenge-text">{ch.solution}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
               {/* Tech Stack */}
               <motion.div className="project-detail-section" variants={itemVariants}>
                 <div className="section-header">
-                  <Code2 size={20} style={{ color: theme.accent }} />
-                  <h3>Technology Stack</h3>
+                  <Code2 size={22} style={{ color: theme.accent }} />
+                  <h3>Technology Stack & Implementation Roles</h3>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1rem', fontStyle: 'italic' }}>
-                  Tap a technology to see where it was used
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.25rem' }}>
+                  Click any technology badge below to inspect its exact implementation role in this architecture
                 </p>
                 <motion.div
-                  className="skills-grid"
+                  className="skills-grid detail-tech-grid"
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
                 >
-                  {project.tech.map((t, idx) => (
-                    <motion.div
-                      key={idx}
-                      className="skill-badge tech-badge-clickable"
-                      variants={techItemVariants}
-                      whileHover={{ scale: 1.08, y: -3 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedTech(t)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {t}
-                    </motion.div>
-                  ))}
+                  {project.tech.map((t, idx) => {
+                    const techInfo = techIconMap[t];
+                    return (
+                      <motion.div
+                        key={idx}
+                        className="skill-badge tech-badge-clickable"
+                        variants={techItemVariants}
+                        whileHover={{ scale: 1.08, y: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSelectedTech(t)}
+                        style={{ '--skill-accent': techInfo?.color || theme.accent, cursor: 'none' }}
+                      >
+                        <div className="skill-badge-inner">
+                          <div className="skill-icon-face">
+                            {techInfo?.icon || <Code2 />}
+                          </div>
+                          <div className="skill-name-face">
+                            <span>{t}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
               </motion.div>
 

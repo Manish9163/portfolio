@@ -9,12 +9,14 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { ExternalLink, Mail, ArrowRight, Code2, BrainCircuit, Trophy, X, Menu, Download, Sparkles, Zap } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaReact, FaPython, FaGitAlt, FaPhp } from 'react-icons/fa6';
 import { SiTypescript, SiTailwindcss, SiThreedotjs, SiGreensock, SiTensorflow, SiMysql } from 'react-icons/si';
 import { AnimatePresence, motion } from 'framer-motion';
 import ProjectDetail from './components/ProjectDetail';
 import MaskHoverReveal from './components/MaskHoverReveal';
+import { projectsData } from './data/projectsData';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -153,93 +155,6 @@ function App() {
         .from('.scroll-indicator', { opacity: 0, duration: 1 }, '-=0.2');
     }
   }, [isStarted]);
-
-  const projectsData = [
-    {
-      id: 1,
-      title: "IoT Traffic Control",
-      short: "Real-time monitoring and automation system.",
-      desc: "An advanced hardware-software integration designed to monitor and manage traffic speed in real-time. By utilizing custom embedded sensors and microcontrollers, it analyzes traffic flow and dynamically adjusts signals to prevent congestion. Developed and demonstrated at the Brainware University Tech Showcase.",
-      tech: ["C++", "Arduino", "ESP32", "Python Data Analytics", "Web Dashboards"],
-      techUsage: {
-        "C++": "Core firmware logic for Arduino and ESP32 microcontrollers, handling sensor reads and signal control.",
-        "Arduino": "Hardware prototyping and sensor integration for real-time traffic monitoring nodes.",
-        "ESP32": "Wi-Fi enabled microcontroller transmitting live traffic data to the central dashboard.",
-        "Python Data Analytics": "Processing traffic flow data, generating trend reports, and forecasting congestion.",
-        "Web Dashboards": "Real-time browser-based visualization of traffic patterns, signal status, and alerts.",
-      },
-      link: "#"
-    },
-    {
-      id: 2,
-      title: "Plant Disease Detection",
-      short: "Full-stack AI system for image-based disease diagnosis.",
-      desc: "A machine learning oriented application that takes images of plant leaves from farmers via a web portal, processes them through a Convolutional Neural Network (CNN), and swiftly identifies possible diseases. It also suggests actionable treatments and organic chemical ratios.",
-      tech: ["Python", "TensorFlow", "React", "Node.js", "Flask", "OpenCV", "CNN"],
-      techUsage: {
-        "Python": "Backend server logic, ML model training pipeline, and data preprocessing scripts.",
-        "TensorFlow": "Building and training the CNN model for multi-class leaf disease classification.",
-        "React": "Frontend web portal where farmers upload leaf images and view diagnosis results.",
-        "Node.js": "Backend API server handling image uploads, user auth, and prediction requests.",
-        "Flask": "Python microservice serving the trained ML model via REST endpoints.",
-        "OpenCV": "Image preprocessing — resizing, augmentation, and feature extraction before model inference.",
-        "CNN": "Convolutional Neural Network architecture achieving 95%+ accuracy on disease classification.",
-      },
-      link: "https://github.com/Manish9163/PlantDiseaseSystem"
-    },
-    {
-      id: 3,
-      title: "Indian Wanderer",
-      short: "Platform for personalized itinerary planning and scheduling.",
-      desc: "A comprehensive monolithic platform designed to transform the travel experience. Users can securely log in, build personalized daily trip itineraries, find budget-friendly activities, and track travel expenses in real-time.",
-      tech: ["PHP", "MySQL", "JavaScript", "React", "Bootstrap", "Angular", "Node.js", "Tailwind CSS", "Next.js", "TypeScript"],
-      techUsage: {
-        "PHP": "Server-side scripting for vendor management, booking logic, and session handling.",
-        "MySQL": "Relational database storing user profiles, itineraries, bookings, and expense records.",
-        "JavaScript": "Client-side interactivity, DOM manipulation, and dynamic content rendering.",
-        "React": "Component-based UI for the itinerary builder, expense tracker, and trip planner.",
-        "Bootstrap": "Responsive grid layout and pre-built UI components for rapid prototyping.",
-        "Angular": "Admin dashboard for vendor management and booking analytics.",
-        "Node.js": "RESTful API server for real-time data operations and guide communication.",
-        "Tailwind CSS": "Utility-first styling for the travel planning interface and responsive design.",
-        "Next.js": "Server-side rendering for SEO-optimized public-facing travel pages.",
-        "TypeScript": "Type-safe codebase for the booking engine and payment processing modules.",
-      },
-      link: "https://github.com/Manish9163/Indian-Wonderer-Website"
-    },
-    {
-      id: 4,
-      title: "Accessibility Checker",
-      short: "Specialized web auditing tool ensuring inclusive standards.",
-      desc: "A browser-based auditing engine that validates DOM trees against modern Web Content Accessibility Guidelines (WCAG). It parses active code logic deeply to spotlight contrast violations, missing aria-labels, and improper interactive elements.",
-      tech: ["React.js", "Chrome API", "DOM Parser", "WCAG 2.1 JS Rules", "TypeScript"],
-      techUsage: {
-        "React.js": "Frontend interface for the auditing dashboard displaying violations and compliance scores.",
-        "Chrome API": "Browser extension integration for accessing and inspecting active page DOM trees.",
-        "DOM Parser": "Parsing and traversing webpage DOM structures to identify accessibility violations.",
-        "WCAG 2.1 JS Rules": "Custom rule engine validating against 50+ WCAG accessibility standards.",
-        "TypeScript": "Type-safe implementation of audit rules, report generation, and extension logic.",
-      },
-      link: "https://github.com/Manish9163/accessbility-checker"
-    },
-    {
-      id: 5,
-      title: "FarmFi",
-      short: "An AI ecosystem for smart farming and agricultural financing.",
-      desc: "A comprehensive AI-driven ecosystem aiming to revolutionize the agricultural sector. It leverages machine learning to provide actionable insights for crop management and integrates specialized financial tooling.",
-      tech: ["AI/ML", "React", "Python", "Data Science", "Flask", "TensorFlow", "MySQL"],
-      techUsage: {
-        "AI/ML": "Predictive models for crop yield forecasting, disease detection, and market price analysis.",
-        "React": "Frontend dashboard for farmers to view analytics, financial tools, and AI predictions.",
-        "Python": "Backend logic, data processing pipelines, and model training infrastructure.",
-        "Data Science": "Statistical analysis of agricultural data, market trends, and financial modeling.",
-        "Flask": "API server connecting trained ML models to the React frontend via REST endpoints.",
-        "TensorFlow": "Training deep learning models for crop disease detection and yield optimization.",
-        "MySQL": "Relational database for farmer profiles, loan records, and agricultural data storage.",
-      },
-      link: "https://github.com/Manish9163/FarmFi-an_AI_ecosytem"
-    }
-  ];
 
   const navItems = ['philosophy', 'experience', 'craft', 'innovation', 'projects', 'about', 'contact'];
 
