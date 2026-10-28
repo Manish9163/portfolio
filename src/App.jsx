@@ -16,6 +16,7 @@ import { SiTypescript, SiTailwindcss, SiThreedotjs, SiGreensock, SiTensorflow, S
 import { AnimatePresence, motion } from 'framer-motion';
 import ProjectDetail from './components/ProjectDetail';
 import MaskHoverReveal from './components/MaskHoverReveal';
+import TypingAnimation from './components/TypingAnimation';
 import { projectsData } from './data/projectsData';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -277,9 +278,9 @@ function App() {
                 ))}
               </div>
               <div className="hero-subtitle-wrap">
-                {['ENGINEERING', '&', 'DESIGN'].map((word, i) => (
-                  <span key={i} className="hero-subtitle-word">{word}</span>
-                ))}
+                <span className="hero-subtitle-word">
+                  <TypingAnimation />
+                </span>
               </div>
               <div className="hero-cta-group">
                 <button className="hero-btn-primary" onClick={() => {
@@ -474,13 +475,13 @@ function App() {
             <p className="content-p" style={{ marginBottom: '3rem' }}>If you're looking for a passionate developer bridging frontend technologies and intelligent systems, feel free to reach out.</p>
 
             <div className="contact-links">
-              <a href="/Manish_Das_Resume_updated.pdf" download className="social-btn resume-btn">
+              <a href="Manish_Das_Resume.pdf" download className="social-btn resume-btn">
                 <Download size={20} />
                 <span>Download Resume</span>
               </a>
               <a href="mailto:manishdas20987@gmail.com" className="social-btn">
                 <Mail size={20} />
-                <span>manishdas20987@gmail.com</span>
+                <span>Let's Collaborate</span>
               </a>
               <a href="https://github.com/Manish9163" target="_blank" rel="noreferrer" className="social-btn">
                 <FaGithub size={20} />

@@ -559,6 +559,41 @@ html {
   color: var(--text-muted);
 }
 
+/* Typing Animation */
+.typing-animation {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5em;
+}
+
+.typing-text {
+  background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 50%, #f43f5e 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: typing-gradient 4s ease infinite;
+}
+
+.typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 300;
+  color: #7c3aed;
+  animation: cursor-blink 0.7s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes typing-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .hero-cta-group {
   margin-top: 3.5rem;
   display: flex;
